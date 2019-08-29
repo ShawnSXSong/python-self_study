@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#this script is use to  check Oracle DB table row num
+import cx_Oracle
+import csv
+
+db_user           =''
+db_passwd         =''
+db_port           =''
+db_ip             =''
+db_sid            =''
+sql_check_schema  ="""
+select s.username "schema_name",t.table_name
+from (
+select username
+from dba_users
+where account_status='OPEN' and initial_rsrc_consumer_group Not LIKE 'SYS_GROUP'
+) s
+left join sys.dba_tables t on s.username=t.owner
+order by username,table_name
+"""
+
+conn      = cx_Oracle.connect('{0}/{1}@{2}:{3}/{4}'.format(db_user,db_passwd,db_ip,db_port,db_sid))
+cur       = conn.cursor()
+cur.execute(sql_check_schema)
+schema    = cur.fetchall()
+row_list  =[]
+for m in schema:
+    if str(m[1])=='None':
+        pass
+    else:
+        table           ="{0}.{1}".format(m[0],m[1])
+        sql_check_rows  = """select count(*) from {0}""".format(table)
+        cur.execute(sql_check_rows)
+        rows            = cur.fetchall()
+        temp            =['{0},{1},{2}'.format(str(m[0]),str(m[1]),str(rows[0][0]))]
+        row_list.append(temp)
+with open('{0}.csv'.format(db_sid), 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(["schema","table_name","row_num"])
+        for r in range(len(row_list)):
+            temp_t  =" ".join(row_list[r])
+            temp_t  =temp_t.split(',')
+            writer.writerow(temp_t)
+conn.commit()
+cur.close()
+conn.close()
