@@ -4,13 +4,12 @@
 import psycopg2
 import csv
 
-db_user=''
-db_passwd=''
-db_port=''
-db_ip=''
-db_sid=''
-
-sql_check_schema="""
+db_user             =''
+db_passwd           =''
+db_port             =''
+db_ip               =''
+db_sid              =''
+sql_check_schema    ="""
 select s.nspname "schema_name",t.tablename
 from (
 select nspname
@@ -34,16 +33,16 @@ for m in schema:
         table           ='"{0}"."{1}"'.format(m[0],m[1])
         sql_check_rows  = """select count(*) from {0}""".format(table)
         cur.execute(sql_check_rows)
-        rows  = cur.fetchall()
-        temp =['{0},{1},{2}'.format(str(m[0]),str(m[1]),str(rows[0][0]))]
+        rows    = cur.fetchall()
+        temp    =['{0},{1},{2}'.format(str(m[0]),str(m[1]),str(rows[0][0]))]
         row_list.append(temp)
 print(row_list)
 with open('{0}.csv'.format(db_sid), 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["schema","table_name","row_num"])
         for r in range(len(row_list)):
-            temp_t=" ".join(row_list[r])
-            temp_t=temp_t.split(',')
+            temp_t  =" ".join(row_list[r])
+            temp_t  =temp_t.split(',')
             writer.writerow(temp_t)
 conn.commit()
 cur.close()
